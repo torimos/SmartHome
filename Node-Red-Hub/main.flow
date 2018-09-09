@@ -309,7 +309,7 @@
         "type": "function",
         "z": "2bd23ad5.f82ea6",
         "name": "History",
-        "func": "msg1 = {};\nmsg2 = {};\nmsg3 = {};\nif (msg.payload.dsn == \"A0000FC5A0000AE30\")\n{\n    msg3.topic = \"Erros, #\";\n    msg3.payload = msg.payload.value.err - 1;\n    msg2.topic = \"Humidity, %\";\n    msg2.payload = msg.payload.value.h;\n    msg1.topic = \"Temperature, C\";\n    msg1.payload = msg.payload.value.t-5;\n}\nreturn [msg1, msg2, msg3];",
+        "func": "msg1 = {};\nmsg2 = {};\nmsg3 = {};\nif (msg.payload.dsn == \"A0000FC5A0000AE30\")\n{\n    msg3.topic = \"Erros, #\";\n    msg3.payload = msg.payload.value.err - 1;\n    msg2.topic = \"Humidity, %\";\n    msg2.payload = Math.round(msg.payload.value.h, 2);\n    msg1.topic = \"Temperature, C\";\n    msg1.payload = Math.round(msg.payload.value.t, 2)-5;\n}\nreturn [msg1, msg2, msg3];",
         "outputs": 3,
         "noerr": 0,
         "x": 810,
