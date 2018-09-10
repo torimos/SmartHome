@@ -14,7 +14,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 char dsn[32];
-char mssg[128];
+char mssg[256];
 RTC_DATA_ATTR int sleepTime = 15;
 RTC_DATA_ATTR int bootCount = 0;
 
@@ -48,6 +48,7 @@ void publishLog(const char* category, const char* message)
         Serial.printf("[%s] %s. ####\n\r",topic.c_str(), message);
     else
         Serial.printf("[%s] %s\n\r",category, message);
+    delay(100);
 }
 
 void logError(const char* message)
@@ -98,16 +99,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void deepSleep(uint32_t time_ms)
 {
+    logInfo((String("Node offline. Deep sleep for ") + String(time_ms) + String(" ms")).c_str());
     bootCount++;
-    Serial.printf("Going to sleep for %d usec...\n\r", time_ms);
-    delay(100);
     ESP.deepSleep(time_ms*1e3);
 }
 
 void restart()
 {
-    Serial.println("Rebooting...\n\r");
     loopMqtt(5000);
+    logInfo("Node offline. Reebooting...");
     ESP.restart();
 }
 
@@ -121,6 +121,7 @@ void setup_wifi(unsigned int timeout = 5000)
     {
         Serial.print("Connected, IP address: ");
         Serial.println(WiFi.localIP());
+        logInfo((String("Node online. IP: ")+WiFi.localIP().toString()).c_str());
     }
     else
     {
@@ -137,19 +138,19 @@ void setup() {
     client.setCallback(callback);
     
     sprintf(dsn,"A%08X%08X",(uint16_t)(chipid>>32), (uint16_t)(chipid));
-    Serial.printf("\n\rdsn:%s, firmware v1.0.0a\n\r", dsn);
+    Serial.printf("\n\rdsn:%s, firmware v1.0.1a\n\r", dsn);
     setup_wifi();
     float t = NAN, h = NAN;
     auto sw1 = millis();
     Serial.print("Reading sensor data: ");
-    int readErrors = 0;
+    int readErrors = -1;
     while (isnan(h) || isnan(t))
     {
+        readErrors++;
         if (beginSensor())
         {
             t = readTemp();
             h = readHum();
-            break;
         }
         if ((millis()-sw1) >= 12000)
         {
@@ -157,7 +158,6 @@ void setup() {
             logLastSensorError();
             restart();
         }
-        readErrors++;
         delay(1000);
     }
     Serial.println();
@@ -165,7 +165,7 @@ void setup() {
     if (isnan(t)) t =  0.0;
 
     reconnect();
-    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d}}", bootCount, dsn, sleepTime, "temphum", t, h, readErrors);
+    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d}}", bootCount, dsn, sleepTime, "th", t, h, readErrors);
     if (client.publish("/sensor/data", mssg))
         Serial.printf("[%08ld] Message %d sent. JSON: %s\n\r", millis(), bootCount, mssg);
     else
