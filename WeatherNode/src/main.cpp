@@ -5,7 +5,6 @@
 #include <esp_wifi.h>
 #else
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
 #endif
 
 #include <PubSubClient.h>
@@ -15,16 +14,15 @@
 #if ESP32
 #define DHTPIN 15
 #else 
-#define DHTPIN D4
+    #ifdef TARGET_ESP01
+    #define DHTPIN 0
+    #else
+    #define DHTPIN D4
+    #endif
 #endif
 #define DHTTYPE DHT22 // WAS DHT22
 
 DHT _dht(DHTPIN, DHTTYPE);
-#if ESP32
-WiFiMulti wifiMulti;
-#else
-ESP8266WiFiMulti wifiMulti;
-#endif
 WiFiClient espClient;
 PubSubClient client(espClient);
 
@@ -164,21 +162,6 @@ void restart()
 void setup_wifi(unsigned int timeout = 15000)
 { 
     Serial.println("Connecting to Wifi...");
-    #if ESP32
-    wifiMulti.addAP("smart-hub-npik2", "smarthome2018");
-    wifiMulti.addAP("zza-net", "graphidus2018marcon77deblux");
-    if(wifiMulti.run(timeout) == WL_CONNECTED)
-    {
-        Serial.print("Connected, IP address: ");
-        logInfo((String("Node online. IP: ")+WiFi.localIP().toString()).c_str());
-    }
-    else
-    {
-        logError("Failed to connect to WiFi. Timeout!");
-        restart();
-    }
-    #else
-
     if (!WiFi.isConnected())
     {
         WiFi.persistent(false);
@@ -203,7 +186,6 @@ void setup_wifi(unsigned int timeout = 15000)
         Serial.print("Already connected, IP address: ");
     }
     logInfo((String("Node online. IP: ")+WiFi.localIP().toString()).c_str());
-    #endif
 }
 
 void setup() {
