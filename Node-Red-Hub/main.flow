@@ -309,8 +309,8 @@
         "type": "function",
         "z": "2bd23ad5.f82ea6",
         "name": "History",
-        "func": "msg1 = {};\nmsg2 = {};\nmsg3 = {};\nif (msg.payload.dsn == \"A0000FC5A0000AE30\")\n{\n    msg3.topic = \"Erros, #\";\n    msg3.payload = msg.payload.value.err;\n    msg2.topic = \"Humidity, %\";\n    msg2.payload = Math.round(msg.payload.value.h * 100) / 100;\n    msg1.topic = \"Temperature, C\";\n    msg1.payload = Math.round(msg.payload.value.t * 100) / 100 - 5;\n}\nreturn [msg1, msg2, msg3];",
-        "outputs": 3,
+        "func": "msg1 = {};\nmsg2 = {};\nmsg3 = {};\nmsg4 = {};\nif (msg.payload.dsn == \"A0000DE00003618E4\")//\"A0000FC5A0000AE30\")\n{\n    msg4.topic = \"WiFi Erros, #\";\n    msg4.payload = msg.payload.value.wifi_err;\n    msg3.topic = \"Erros, #\";\n    msg3.payload = msg.payload.value.err;\n    msg2.topic = \"Humidity, %\";\n    msg2.payload = Math.round(msg.payload.value.h * 100) / 100;\n    msg1.topic = \"Temperature, C\";\n    msg1.payload = Math.round(msg.payload.value.t * 100) / 100;\n}\nreturn [msg1, msg2, msg3, msg4];",
+        "outputs": 4,
         "noerr": 0,
         "x": 810,
         "y": 160,
@@ -326,6 +326,10 @@
             [
                 "6cffc362.a3a33c",
                 "225fe56c.3da3fa"
+            ],
+            [
+                "6cffc362.a3a33c",
+                "9bbaf96c.a34de8"
             ]
         ]
     },
@@ -349,7 +353,7 @@
         "ymax": "",
         "removeOlder": "1",
         "removeOlderPoints": "",
-        "removeOlderUnit": "86400",
+        "removeOlderUnit": "60",
         "cutout": 0,
         "useOneColor": false,
         "colors": [
@@ -364,7 +368,7 @@
             "#c5b0d5"
         ],
         "useOldStyle": false,
-        "x": 1100,
+        "x": 1050,
         "y": 160,
         "wires": [
             [],
@@ -639,5 +643,31 @@
                 "b111e284.87996"
             ]
         ]
+    },
+    {
+        "id": "9bbaf96c.a34de8",
+        "type": "ui_gauge",
+        "z": "2bd23ad5.f82ea6",
+        "name": "",
+        "group": "a97d26b0.23fbf8",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "WiFi Errors, #",
+        "label": "units",
+        "format": "{{value}}",
+        "min": "0",
+        "max": "12",
+        "colors": [
+            "#ffffff",
+            "#f5bd54",
+            "#fb0000"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 1020,
+        "y": 280,
+        "wires": []
     }
 ]
