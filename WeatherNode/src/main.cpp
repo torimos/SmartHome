@@ -78,12 +78,12 @@ void publishLog(const char* category, const char* message)
 
 void logError(const char* message)
 {
-    publishLog("ERR", message);
+    //publishLog("ERR", message);
 }
 
 void logInfo(const char* message)
 {
-    publishLog("INF", message);
+    //publishLog("INF", message);
 }
 
 void logLastSensorError()
@@ -204,7 +204,8 @@ void setup_wifi(unsigned int timeout = 15000)
 void setup() {
 
     auto sw = millis();
-    Serial.begin(115200);
+    Serial.end();
+    //Serial.begin(115200);
     #ifdef ESP32
     auto chipid = ESP.getEfuseMac();
     sprintf(dsn,"A%08X%08X",(uint16_t)(chipid>>32), (uint16_t)(chipid));
@@ -246,8 +247,9 @@ void setup() {
     
     setup_wifi();
     reconnect();
-    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d,\"wifi_err\":%d}}", rtcData.bootCount, dsn, rtcData.sleepTime, "th", t, h, readErrors, rtcData.wifi_errors);
-    if (client.publish("/sensor/data", mssg))
+    //sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d,\"wifi_err\":%d}}", rtcData.bootCount, dsn, rtcData.sleepTime, "th", t, h, readErrors, rtcData.wifi_errors);
+    sprintf(mssg, "%08x%08x%08x%08x",(uint32_t)chipid, (uint32_t)rtcData.bootCount, (uint32_t)(t*1024), (uint32_t)(h*1024));
+    if (client.publish("/sensor/data2", mssg))
         Serial.printf("[%08ld] Message %d sent. JSON: %s\n\r", millis(), rtcData.bootCount, mssg);
     else
         logError("Failed to send message!");
