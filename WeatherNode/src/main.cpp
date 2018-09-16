@@ -16,9 +16,9 @@
     #ifdef TARGET_ESP01
     #define DHTPIN 0
     #else
-    #define DHTPIN D5
+    #define DHTPIN D4
     #endif
-    #define DHTTYPE DHT11
+    #define DHTTYPE DHT22
 #endif
 
 DHT _dht(DHTPIN, DHTTYPE);
@@ -51,7 +51,7 @@ void reconnect()
             Serial.print("*");
         }
         else {
-            //client.subscribe("config");
+            client.subscribe("config");
         }
     }
 }
@@ -150,17 +150,18 @@ void deepSleep(uint32_t time_ms)
     logInfo((String("Node offline. Deep sleep for ") + String(time_ms) + String(" ms")).c_str());
     saveRTCData();
     delay(200);
-    WiFi.disconnect(true);
     #if ESP32
     ESP.deepSleep(time_ms*1e3);
     #else
+    WiFi.forceSleepBegin();
+    WiFi.mode(WIFI_OFF);
     #if TARGET_ESP01
     WiFi.forceSleepBegin(time_ms*1e3);
     delay(time_ms);
     WiFi.forceSleepWake();
     ESP.restart();
     #else
-    ESP.deepSleep(time_ms*1e3, RF_CAL);
+    ESP.deepSleep(time_ms*1e3, WAKE_RF_DEFAULT);
     #endif
     #endif
 }
@@ -177,8 +178,7 @@ void setup_wifi(unsigned int timeout = 15000)
     Serial.println("Connecting to Wifi...");
     if (!WiFi.isConnected())
     {
-        WiFi.persistent(false);
-        WiFi.disconnect(true);
+        WiFi.forceSleepWake();
         WiFi.mode(WIFI_STA);
         //WiFi.begin("smart-hub-npik2", "smarthome2018");
         WiFi.begin("zza-net", "graphidus2018marcon77deblux");
