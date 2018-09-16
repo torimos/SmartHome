@@ -1,8 +1,6 @@
 #include <Arduino.h>
 #if ESP32
 #include <WiFi.h>
-#include <WiFiMulti.h>
-#include <esp_wifi.h>
 #else
 #include <ESP8266WiFi.h>
 #endif
@@ -13,14 +11,15 @@
 
 #if ESP32
 #define DHTPIN 15
+#define DHTTYPE DHT11
 #else 
     #ifdef TARGET_ESP01
     #define DHTPIN 0
     #else
-    #define DHTPIN D4
+    #define DHTPIN D5
     #endif
+    #define DHTTYPE DHT11
 #endif
-#define DHTTYPE DHT22 // WAS DHT22
 
 DHT _dht(DHTPIN, DHTTYPE);
 WiFiClient espClient;
@@ -28,16 +27,20 @@ PubSubClient client(espClient);
 
 char dsn[32];
 char mssg[256];
+
+#define RTC_DATA_CRC 0xDEADBEAF
+typedef struct 
+{
+    uint32_t crc;
+    int sleepTime;
+    int bootCount;
+    int wifi_errors;
+} RTCData;
+
 #if ESP32
-RTC_DATA_ATTR int firstBoot = 1;
-RTC_DATA_ATTR int sleepTime = 15;
-RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR int wifi_errors = 0;
+RTC_DATA_ATTR RTCData rtcData;
 #else
-int firstBoot = 1;
-int sleepTime = 15;
-int bootCount = 0;
-int wifi_errors = 0;
+RTCData rtcData;
 #endif
 
 void reconnect()
@@ -48,7 +51,7 @@ void reconnect()
             Serial.print("*");
         }
         else {
-            client.subscribe("config");
+            //client.subscribe("config");
         }
     }
 }
@@ -64,7 +67,7 @@ void publishLog(const char* category, const char* message)
 {
     String topic = "/sensor/log/";
     topic = topic + String(category);
-    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"cat\":\"%s\",\"mssg\":\"%s\"}", bootCount, dsn, category, message);
+    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"cat\":\"%s\",\"mssg\":\"%s\"}", rtcData.bootCount, dsn, category, message);
     reconnect();
     if (!client.publish(topic.c_str(), mssg))
         Serial.printf("[%s] %s. ####\n\r",topic.c_str(), message);
@@ -106,38 +109,48 @@ float readHum()
 void callback(char* topic, byte* payload, unsigned int length) {
     if (String(topic) == String("config"))
     {
-        int newSleepTime = sleepTime;
+        int newSleepTime = rtcData.sleepTime;
         if (length == 2)
             newSleepTime = payload[0] | (payload[1]<<8);
         else
             newSleepTime = payload[0];
-        if (newSleepTime != sleepTime)
+        if (newSleepTime != rtcData.sleepTime)
         {
-            sleepTime = newSleepTime;
-            Serial.printf("Sleep time has been updated to: %d sec\n\r", sleepTime);
+            rtcData.sleepTime = newSleepTime;
+            Serial.printf("Sleep time has been updated to: %d sec\n\r", rtcData.sleepTime);
         }
     }
 }
 
-void storeRTCData()
+void readRTCData()
 {
-    bootCount++;
     #ifndef ESP32
-    firstBoot = 0;
-    ESP.rtcUserMemoryWrite(0, (uint32_t*)&firstBoot, sizeof(firstBoot));
-    ESP.rtcUserMemoryWrite(sizeof(firstBoot), (uint32_t*)&sleepTime, sizeof(sleepTime));
-    ESP.rtcUserMemoryWrite(sizeof(firstBoot)+sizeof(sleepTime), (uint32_t*)&bootCount, sizeof(bootCount));
-    ESP.rtcUserMemoryWrite(sizeof(firstBoot)+sizeof(sleepTime)+sizeof(bootCount), (uint32_t*)&wifi_errors, sizeof(wifi_errors));
+    ESP.rtcUserMemoryRead(0, (uint32_t*)&rtcData, sizeof(rtcData));
+    #endif
+    if (rtcData.crc != RTC_DATA_CRC)
+    {
+        rtcData.sleepTime = 15;
+        rtcData.bootCount = 0;
+        rtcData.wifi_errors = 0;
+    }
+}
+
+void saveRTCData()
+{
+    rtcData.bootCount++;
+    rtcData.crc = RTC_DATA_CRC;
+    #ifndef ESP32
+    ESP.rtcUserMemoryWrite(0, (uint32_t*)&rtcData, sizeof(rtcData));
     #endif
 }
 
 void deepSleep(uint32_t time_ms)
 {
+    time_ms -= 200;
     logInfo((String("Node offline. Deep sleep for ") + String(time_ms) + String(" ms")).c_str());
-    storeRTCData();
-    client.disconnect();
+    saveRTCData();
+    delay(200);
     WiFi.disconnect(true);
-    delay(50);
     #if ESP32
     ESP.deepSleep(time_ms*1e3);
     #else
@@ -155,7 +168,7 @@ void deepSleep(uint32_t time_ms)
 void restart()
 {
     logInfo("Node offline. Reebooting...");
-    storeRTCData();
+    saveRTCData();
     ESP.restart();
 }
 
@@ -189,6 +202,7 @@ void setup_wifi(unsigned int timeout = 15000)
 }
 
 void setup() {
+
     auto sw = millis();
     Serial.begin(115200);
     #ifdef ESP32
@@ -197,20 +211,12 @@ void setup() {
     #else
     auto chipid = ESP.getChipId();
     sprintf(dsn,"A%08X%08X",0xDE00, chipid);
-    ESP.rtcUserMemoryRead(0, (uint32_t*)&firstBoot, sizeof(firstBoot));
-    if (firstBoot == 0)
-    {
-        ESP.rtcUserMemoryRead(sizeof(firstBoot), (uint32_t*)&sleepTime, sizeof(sleepTime));
-        ESP.rtcUserMemoryRead(sizeof(firstBoot)+sizeof(sleepTime), (uint32_t*)&bootCount, sizeof(bootCount));
-        ESP.rtcUserMemoryRead(sizeof(firstBoot)+sizeof(sleepTime)+sizeof(bootCount), (uint32_t*)&wifi_errors, sizeof(wifi_errors));
-    }
     #endif
-    Serial.printf("\n\rdsn:%s, firmware v1.0.1a [boot_count=%d]\n\r", dsn, bootCount);
+    readRTCData();
+    Serial.printf("\n\rdsn:%s, firmware v1.0.1a [boot_count=%d]\n\r", dsn, rtcData.bootCount);
    
     client.setServer("192.168.1.121", 1883);
     client.setCallback(callback);
-    
-    setup_wifi();
    
     float t = NAN, h = NAN;
     auto sw1 = millis();
@@ -237,18 +243,19 @@ void setup() {
     if (isnan(h)) h =  0.0;
     if (isnan(t)) t =  0.0;
 
+    
+    setup_wifi();
     reconnect();
-    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d,\"wifi_err\":%d}}", bootCount, dsn, sleepTime, "th", t, h, readErrors, wifi_errors);
+    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d,\"wifi_err\":%d}}", rtcData.bootCount, dsn, rtcData.sleepTime, "th", t, h, readErrors, rtcData.wifi_errors);
     if (client.publish("/sensor/data", mssg))
-        Serial.printf("[%08ld] Message %d sent. JSON: %s\n\r", millis(), bootCount, mssg);
+        Serial.printf("[%08ld] Message %d sent. JSON: %s\n\r", millis(), rtcData.bootCount, mssg);
     else
         logError("Failed to send message!");
-    
-    if (firstBoot != 0)
+    if (rtcData.crc != RTC_DATA_CRC)
     {
         loopMqtt();
     }
-    deepSleep(sleepTime * 1e3 - (millis() - sw));
+    deepSleep(rtcData.sleepTime * 1e3 - (millis() - sw));
 }
 
 void loop() {
