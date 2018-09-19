@@ -68,22 +68,22 @@ void publishLog(const char* category, const char* message)
     String topic = "/sensor/log/";
     topic = topic + String(category);
     sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"cat\":\"%s\",\"mssg\":\"%s\"}", rtcData.bootCount, dsn, category, message);
-    reconnect();
-    if (!client.publish(topic.c_str(), mssg))
-        Serial.printf("[%s] %s. ####\n\r",topic.c_str(), message);
-    else
+    //reconnect();
+    // if (!client.publish(topic.c_str(), mssg))
+    //     Serial.printf("[%s] %s. ####\n\r",topic.c_str(), message);
+    // else
         Serial.printf("[%s] %s\n\r",category, message);
     delay(100);
 }
 
 void logError(const char* message)
 {
-    //publishLog("ERR", message);
+    publishLog("ERR", message);
 }
 
 void logInfo(const char* message)
 {
-    //publishLog("INF", message);
+    publishLog("INF", message);
 }
 
 void logLastSensorError()
@@ -178,7 +178,7 @@ void setup_wifi(unsigned int timeout = 15000)
     Serial.println("Connecting to Wifi...");
     if (!WiFi.isConnected())
     {
-        WiFi.forceSleepWake();
+        //WiFi.forceSleepWake();
         WiFi.mode(WIFI_STA);
         //WiFi.begin("smart-hub-npik2", "smarthome2018");
         WiFi.begin("zza-net", "graphidus2018marcon77deblux");
@@ -204,8 +204,7 @@ void setup_wifi(unsigned int timeout = 15000)
 void setup() {
 
     auto sw = millis();
-    Serial.end();
-    //Serial.begin(115200);
+    Serial.begin(115200);
     #ifdef ESP32
     auto chipid = ESP.getEfuseMac();
     sprintf(dsn,"A%08X%08X",(uint16_t)(chipid>>32), (uint16_t)(chipid));
