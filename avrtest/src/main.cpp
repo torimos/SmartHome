@@ -1,10 +1,16 @@
 #include <Arduino.h>
-#include <SPI.h>
+//#include <SPI.h>
 #include <RF24.h>
 
+#ifdef ESP32
 #define CS_PIN 5
 #define CE_PIN 17
-#define RFTX1
+#else
+#define CS_PIN 10//3
+#define CE_PIN 9//4
+#endif
+
+#define RFTX
 
 RF24 radio(CE_PIN, CS_PIN);
 
@@ -16,23 +22,27 @@ int i = 0;
 
 void setup() {
     Serial.begin(115200);
+    Serial.println("Controller started.");
     radio.begin();
-    SPI.begin(18, 19, 23, 5);
+    //SPI.begin();//(18, 19, 23, 5);
     radio.setAutoAck(1);
     radio.setRetries(15,15);
     radio.openWritingPipe(address);
-
-    if (!radio.isChipConnected())
-    {
-        Serial.println("The nRF24L01 is not connected!");
-        while(1);
-    }
 }
 
 void loop() {
-    payload++;
-    radio.write( &payload, sizeof(unsigned long) ); //Send data to 'Receiver' ever second
-    Serial.printf("Sent payload: %d\n\r", payload);
+    if (!radio.isChipConnected())
+    {
+        pinMode(13, OUTPUT);digitalWrite(13, HIGH);
+        Serial.println("The nRF24L01 is not connected!");
+    }
+    else
+    {
+        payload++;
+        radio.write( &payload, sizeof(unsigned long) ); //Send data to 'Receiver' ever second
+        Serial.print("Sent payload: ");
+        Serial.println(payload);
+    }
     delay(1000);
 }
 
