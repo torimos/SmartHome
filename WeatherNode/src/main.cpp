@@ -9,7 +9,16 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 
+
 #if ESP32
+#ifdef __cplusplus
+extern "C" {
+#endif
+uint8_t temprature_sens_read();
+#ifdef __cplusplus
+}
+#endif
+uint8_t temprature_sens_read();
 #define DHTPIN 15
 #define DHTTYPE DHT11
 #else 
@@ -66,8 +75,8 @@ void loopMqtt(uint32_t time_ms = 2000)
 void publishLog(const char* category, const char* message)
 {
     String topic = "/sensor/log/";
-    topic = topic + String(category);
-    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"cat\":\"%s\",\"mssg\":\"%s\"}", rtcData.bootCount, dsn, category, message);
+    //topic = topic + String(category);
+    //sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"cat\":\"%s\",\"mssg\":\"%s\"}", rtcData.bootCount, dsn, category, message);
     //reconnect();
     // if (!client.publish(topic.c_str(), mssg))
     //     Serial.printf("[%s] %s. ####\n\r",topic.c_str(), message);
@@ -94,16 +103,18 @@ void logLastSensorError()
 boolean beginSensor()
 {
     Serial.print(".");
-    _dht.begin();
+    //_dht.begin();
     return true;
 }
 float readTemp()
 {
-    return _dht.readTemperature();
+    return (float)temprature_sens_read();
+    //return _dht.readTemperature();
 }
 float readHum()
 {
-    return _dht.readHumidity();
+    return (float)hallRead()/1000;
+    //return _dht.readHumidity();
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -242,12 +253,11 @@ void setup() {
     Serial.println();
     if (isnan(h)) h =  0.0;
     if (isnan(t)) t =  0.0;
-
     
     setup_wifi();
     reconnect();
-    //sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d,\"wifi_err\":%d}}", rtcData.bootCount, dsn, rtcData.sleepTime, "th", t, h, readErrors, rtcData.wifi_errors);
-    sprintf(mssg, "%08x%08x%08x%08x",(uint32_t)chipid, (uint32_t)rtcData.bootCount, (uint32_t)(t*1024), (uint32_t)(h*1024));
+    sprintf(mssg, "{\"seq\":%d,\"dsn\":\"%s\",\"int\":%d,\"dtp\":\"%s\",\"value\":{\"t\":%.2f,\"h\":%.2f,\"err\":%d,\"wifi_err\":%d}}", rtcData.bootCount, dsn, rtcData.sleepTime, "th", t, h, readErrors, rtcData.wifi_errors);
+    //sprintf(mssg, "%08x%08x%08x%08x",(uint32_t)chipid, (uint32_t)rtcData.bootCount, (uint32_t)(t*1024), (uint32_t)(h*1024));
     if (client.publish("/sensor/data2", mssg))
         Serial.printf("[%08ld] Message %d sent. JSON: %s\n\r", millis(), rtcData.bootCount, mssg);
     else
