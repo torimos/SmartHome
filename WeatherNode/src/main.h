@@ -19,6 +19,7 @@ struct __attribute__((packed)) TSensorData
   float t;
   float h;
   float p;
+  short v;
   unsigned long timestamp;
 };
 

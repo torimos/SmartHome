@@ -14,6 +14,7 @@ export class AppComponent implements OnInit {
   labels = [];
   dataset_t = [];
   dataset_h = [];
+  dataset_v = [];
   datasetName:String = "";
   chart = [];
   recordsCount = 0;
@@ -24,12 +25,15 @@ export class AppComponent implements OnInit {
     this.httpClient.get(this.url).subscribe((res: Data[]) => {
       res.forEach(y => {
         var ts = new Date(y.createdAt);
+        var v = (Number)(y.v)*100.0/1024;
         this.labels.push(`${ts.getMonth()}.${ts.getDate()} ${ts.getHours()}:${ts.getMinutes()}:${ts.getSeconds()}`);
         this.dataset_t.push(y.t);
         this.dataset_h.push(y.h);
+        this.dataset_v.push(v);
         this.datasetName = y.dsn;
         this.latestData.t = y.t;
         this.latestData.h = y.h;
+        this.latestData.v = v;
         this.latestData.ts = ts;
       });
       this.recordsCount = res.length;
@@ -51,6 +55,13 @@ export class AppComponent implements OnInit {
               data: this.dataset_h,
               borderColor: '#0000FF',
               backgroundColor: '#0000FF',
+              fill: false,
+            },
+            {
+              label: "Battery",
+              data: this.dataset_v,
+              borderColor: '#003F00',
+              backgroundColor: '#003F00',
               fill: false,
             }
           ]

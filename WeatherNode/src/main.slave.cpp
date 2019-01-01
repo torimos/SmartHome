@@ -9,7 +9,7 @@ void processRx(const uint8_t mac[6], const uint8_t* buf, size_t count, void* cba
   // }
   // Serial.println();
   TSensorData *p = (TSensorData *)buf;
-  Serial.printf("#{\"ts\":%ld,\"t\":%.3f,\"h\":%.3f,\"p\":%.3f,\"dsn\":\"%02X%02X%02X%02X%02X%02X\"}\n", millis(), p->t, p->h, p->p, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  Serial.printf("#{\"ts\":%ld,\"t\":%.3f,\"h\":%.3f,\"p\":%.3f,\"v\":%d,\"dsn\":\"%02X%02X%02X%02X%02X%02X\"}\n", millis(), p->t, p->h, p->p, p->v, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 void setup()

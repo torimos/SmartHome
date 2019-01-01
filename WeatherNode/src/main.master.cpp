@@ -79,6 +79,7 @@ void deepSleep(uint32_t time_ms)
 void readSensorData()
 {
   sd.timestamp = millis();
+  sd.v = analogRead(A0);
   if (bme.begin(0x76))
   {
     sd.t = bme.readTemperature();
@@ -97,7 +98,6 @@ void readSensorData()
 long sw_start = 0;
 void setup()
 {
-
   sw_start = millis();
 
   pinMode(CONFIG_PIN, INPUT_PULLUP);
@@ -132,7 +132,7 @@ void setup()
     delay( 1 );
   }
   auto sw_end = millis() - sw_start;
-  Serial.printf("Time = %ld t=%.3f h=%.3f p=%.3f\n\r", sw_end, sd.t, sd.h, sd.p);
+  Serial.printf("Time = %ld t=%.3f h=%.3f p=%.3f v=%d\n\r", sw_end, sd.t, sd.h, sd.p, sd.v);
   deepSleep(300000);
 }
 
