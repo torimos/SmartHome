@@ -3,8 +3,14 @@
 export interface Data {
     dsn: String;
     createdAt: Date;
-    t: Number;
-    h: Number;
-    p: Number;
-    v: Number;
+    t: number;
+    h: number;
+    p: number;
+    v: number;
+  }
+
+
+  export interface QueryResponse {
+    items: Data[];
+    totalCount: number;
   }

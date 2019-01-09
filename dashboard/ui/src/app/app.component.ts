@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Chart } from 'chart.js';
 import { HttpClient } from '@angular/common/http';
-import { Data } from './Data';
+import { Data, QueryResponse } from './Data';
+import { Options, ChangeContext, PointerType } from 'ng5-slider';
 
 @Component({
   selector: 'app-root',
@@ -16,28 +17,57 @@ export class AppComponent implements OnInit {
   dataset_h = [];
   dataset_v = [];
   datasetName:String = "";
-  chart = [];
-  recordsCount = 0;
+  chart: Chart = {};
   latestData: any = {};
-  url = 'http://smarthub.local:8080/api/events?limit=288';
+  url = 'http://localhost:8080/api/events';//'http://smarthub.local:8080/api/events?limit=288';
+  sliderSteps: number = 288;
+  sliderValue = 0;
+  oldSliderValue = -1;
+  sliderOptions: Options = null;
   constructor(private httpClient: HttpClient) {}
-  ngOnInit() {
-    this.httpClient.get(this.url).subscribe((res: Data[]) => {
-      res.forEach(y => {
-        var ts = new Date(y.createdAt);
-        var v = (Number)(y.v)*100.0/1024;
-        this.labels.push(`${ts.getMonth()}.${ts.getDate()} ${ts.getHours()}:${ts.getMinutes()}:${ts.getSeconds()}`);
-        this.dataset_t.push(y.t);
-        this.dataset_h.push(y.h);
-        this.dataset_v.push(v);
-        this.datasetName = y.dsn;
-        this.latestData.t = y.t;
-        this.latestData.h = y.h;
-        this.latestData.v = v;
-        this.latestData.ts = ts;
+  onSliderChange(changeContext: ChangeContext): void {
+    if (changeContext.value != this.oldSliderValue) {
+      this.refreshData();
+      this.oldSliderValue = changeContext.value;
+    }
+  };
+  refreshData() {
+    this.data = [];
+    this.labels = [];
+    this.dataset_t = [];
+    this.dataset_h = [];
+    this.dataset_v = [];
+    this.latestData = {};
+    this.httpClient.get(this.url + `?limit=${this.sliderSteps}&skip=${this.sliderValue*this.sliderSteps}`).subscribe((res: QueryResponse) => {
+      let idx = 0;
+      res.items.forEach(y => {
+        if ((idx%12)==0) 
+        {
+          var ts = new Date(y.createdAt);
+          var v = (Number)(y.v)*100.0/1024;
+          this.labels.push(`${ts.getMonth()+1}.${ts.getDate()} ${ts.getHours()}:${ts.getMinutes()}:${ts.getSeconds()}`);
+          this.dataset_t.push(y.t);
+          this.dataset_h.push(y.h);
+          this.dataset_v.push(v);
+          this.datasetName = y.dsn;
+          this.latestData.t = y.t;
+          this.latestData.h = y.h;
+          this.latestData.v = v;
+          this.latestData.ts = ts;
+        }
+        idx++;
       });
-      this.recordsCount = res.length;
-
+      this.sliderOptions = {
+        floor: 0,
+        ceil: Math.floor(res.totalCount/this.sliderSteps),
+        step: 1,
+        showTicks: true,
+        showTicksValues: true
+      };
+      if (this.chart.destroy != null) 
+      {
+        this.chart.destroy();
+      }
       this.chart = new Chart('canvas', {
         type: 'line',
         data: {
@@ -68,8 +98,8 @@ export class AppComponent implements OnInit {
         },
         options: {
           responsive: true,
-					hoverMode: 'index',
-					stacked: false,
+          hoverMode: 'index',
+          stacked: false,
           legend: {
             display: true
           },
@@ -84,5 +114,9 @@ export class AppComponent implements OnInit {
         }
       });
     });
-  }
+  };
+  ngOnInit() {
+    
+    this.refreshData();
+  };
 }

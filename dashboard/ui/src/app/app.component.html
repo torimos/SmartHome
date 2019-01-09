@@ -6,8 +6,11 @@
 </div>
 <h2>Latest data at {{ latestData.ts }} </h2>
 <h2>Temperature = {{ latestData.t }}°C. Humidity = {{ latestData.h }}%. Battery = {{ latestData.v }}%</h2>
-<h2>Historical data (Last 24 hours): {{ recordsCount }} records.</h2>
-<div *ngIf="chart">
-  <canvas id="canvas">{{ chart }}</canvas>
+<h2>Historical data ({{ (sliderValue) }} day(s) ago).</h2>
+<div style="width: 800px">
+  <ng5-slider [(value)]="sliderValue" [options]="sliderOptions" (userChangeEnd)="onSliderChange($event)"></ng5-slider>
+  <div *ngIf="chart">
+    <canvas id="canvas">{{ chart }}</canvas>
+  </div>
 </div>
 <router-outlet></router-outlet>

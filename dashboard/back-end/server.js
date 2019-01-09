@@ -32,11 +32,18 @@ loadDB(mongoUrl, 'hubdb').then((db)=>{
     var query = parsedUrl.query;
     if (req.url.startsWith('/api/events'))
     {
+      let skip = parseInt(query.skip);
       let limit = parseInt(query.limit);
+      let order = parseInt(query.order);
+      skip = skip > 0 ? skip : 0
+      limit = limit > 0 ? limit : 12
+      order = order ? order : -1;
+      const cnt = await db.collection("events").count();
       const records = await db.collection("events")
         .find({})
-        .sort({createdAt: -1})
-        .skip(0).limit(limit > 0 ? limit : 12)
+        .sort({createdAt: order})
+        .skip(skip)
+        .limit(limit)
         .toArray((err, result) => {
           if (err) throw err;
           res.statusCode = 200;
@@ -44,7 +51,10 @@ loadDB(mongoUrl, 'hubdb').then((db)=>{
           res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
           res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-          res.end(JSON.stringify(result.reverse()));
+          var respJson = {};
+          respJson.items = result.reverse();
+          respJson.totalCount = cnt;
+          res.end(JSON.stringify(respJson));
         });
     }
     else {
