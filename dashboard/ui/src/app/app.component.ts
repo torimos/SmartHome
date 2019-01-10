@@ -19,7 +19,8 @@ export class AppComponent implements OnInit {
   datasetName:String = "";
   chart: Chart = {};
   latestData: any = {};
-  url = 'http://localhost:8080/api/events';//'http://smarthub.local:8080/api/events?limit=288';
+  //url = 'http://localhost:8080/api/events';
+  url = 'http://smarthub.local:8080/api/events';
   sliderSteps: number = 288;
   sliderValue = 0;
   oldSliderValue = -1;
