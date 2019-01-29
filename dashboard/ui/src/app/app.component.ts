@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
   latestData: any = {};
   //url = 'http://localhost:8080/api/events';
   url = 'http://smarthub.local:8080/api/events';
-  sliderSteps: number = 288;
+  sliderSteps: number = 24*60/ 30; // 24*60 / interval
   sliderValue = 0;
   oldSliderValue = -1;
   sliderOptions: Options = null;
@@ -42,10 +42,10 @@ export class AppComponent implements OnInit {
     this.httpClient.get(this.url + `?limit=${this.sliderSteps}&skip=${this.sliderValue*this.sliderSteps}`).subscribe((res: QueryResponse) => {
       let idx = 0;
       res.items.forEach(y => {
-        if ((idx%12)==0) 
+        //if ((idx%12)==0) 
         {
           var ts = new Date(y.createdAt);
-          var v = (Number)(y.v)*100.0/1024;
+          var v = (Number)(y.v)*100.0/4096;
           this.labels.push(`${ts.getMonth()+1}.${ts.getDate()} ${ts.getHours()}:${ts.getMinutes()}:${ts.getSeconds()}`);
           this.dataset_t.push(y.t);
           this.dataset_h.push(y.h);
@@ -58,9 +58,12 @@ export class AppComponent implements OnInit {
         }
         idx++;
       });
+
+      let totalCount = this.sliderSteps * 7;
+
       this.sliderOptions = {
         floor: 0,
-        ceil: Math.floor(res.totalCount/this.sliderSteps),
+        ceil: Math.floor(totalCount/this.sliderSteps),
         step: 1,
         showTicks: true,
         showTicksValues: true

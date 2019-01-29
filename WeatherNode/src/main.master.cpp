@@ -6,9 +6,10 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include "config.h"
-
 #include <EEPROM.h>
 #define CONFIG_PIN 14
+
+ADC_MODE(ADC_VCC);
 
 Adafruit_BME280 bme;
 
@@ -79,7 +80,7 @@ void deepSleep(uint32_t time_ms)
 void readSensorData()
 {
   sd.timestamp = millis();
-  sd.v = analogRead(A0);
+  sd.v = ESP.getVcc();
   if (bme.begin(0x76))
   {
     sd.t = bme.readTemperature();
@@ -133,7 +134,7 @@ void setup()
   }
   auto sw_end = millis() - sw_start;
   Serial.printf("Time = %ld t=%.3f h=%.3f p=%.3f v=%d\n\r", sw_end, sd.t, sd.h, sd.p, sd.v);
-  deepSleep(300000);
+  deepSleep(1800000);
 }
 
 void loop() {
