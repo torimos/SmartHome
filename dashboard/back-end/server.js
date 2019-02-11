@@ -59,7 +59,7 @@ loadDB(mongoUrl, 'hubdb').then((db)=>{
     }
     else if (req.url.startsWith('/api/commands'))
     {
-      if (query.cmd == "reboot") {
+      if (query.name == "reboot") {
         require('child_process').exec('sudo /sbin/shutdown -r now', function (msg) { console.log(msg) });
       }
     }
@@ -68,15 +68,8 @@ loadDB(mongoUrl, 'hubdb').then((db)=>{
       let pathname = path.join(__dirname + "/dist", sanitizePath);
 
       fs.exists(pathname, function (exist) {
-        if(!exist) {
-          // if the file is not found, return 404
-          res.statusCode = 404;
-          res.end(`File ${pathname} not found!`);
-          return;
-        }
-        // if is a directory, then look for index.html
-        if (fs.statSync(pathname).isDirectory()) {
-          pathname += '/index.html';
+        if(!exist || fs.statSync(pathname).isDirectory()) {
+          pathname = path.join(__dirname + "/dist", '/index.html');
         }
         // read file from file system
         fs.readFile(pathname, function(err, data){
