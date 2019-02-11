@@ -57,6 +57,12 @@ loadDB(mongoUrl, 'hubdb').then((db)=>{
           res.end(JSON.stringify(respJson));
         });
     }
+    else if (req.url.startsWith('/api/commands'))
+    {
+      if (query.cmd == "reboot") {
+        require('child_process').exec('sudo /sbin/shutdown -r now', function (msg) { console.log(msg) });
+      }
+    }
     else {
       const sanitizePath = path.normalize(parsedUrl.pathname).replace(/^(\.\.[\/\\])+/, '');
       let pathname = path.join(__dirname + "/dist", sanitizePath);
