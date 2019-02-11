@@ -10,6 +10,7 @@
 #define CONFIG_PIN 14
 
 ADC_MODE(ADC_VCC);
+// 77.49% > actual bat is 0%
 
 Adafruit_BME280 bme;
 

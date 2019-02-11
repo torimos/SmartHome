@@ -1,0 +1,119 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-3 col-sm-6">
+            <div class="card">
+                <div class="content">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="icon-big text-center" style="color: #0db9f0">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                        </div>
+                        <div class="col-xs-9">
+                            <div class="numbers" style="font-size: 1.4em">
+                                <p>Last Updated</p>
+                                {{ latestData.ts | date:"MM/dd/yyyy 'at' h:mma" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card">
+                <div class="content">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="icon-big text-center" style="color: orangered">
+                                <i class="fas fa-thermometer-three-quarters"></i>
+                            </div>
+                        </div>
+                        <div class="col-xs-9">
+                            <div class="numbers">
+                                <p>Temperature</p>
+                                {{ latestData.t.toFixed(1) }}°C
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card">
+                <div class="content">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="icon-big text-center" style="color: blue">
+                                <i class="fas fa-tint"></i>
+                            </div>
+                        </div>
+                        <div class="col-xs-9">
+                            <div class="numbers">
+                                <p>Humidity</p>
+                                {{ latestData.h.toFixed(0) }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card">
+                <div class="content">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <div class="icon-big text-center" style="color: green">
+                                <i class="fas fa-battery-three-quarters"></i>
+                            </div>
+                        </div>
+                        <div class="col-xs-9">
+                            <div class="numbers">
+                                <p>Battery</p>
+                                {{ latestData.v.toFixed(0) }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">Historical data ({{ (sliderValue) }} day(s) ago)</h4>
+                    <p class="category">Tramp pam pa</p>
+                </div>
+                <div class="content">
+                    <ng5-slider [(value)]="sliderValue" [options]="sliderOptions" (userChangeEnd)="onSliderChange($event)"></ng5-slider>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="header">
+                    <h4 class="title">Sensors Data</h4>
+                    <p class="category">Tramp pam pa</p>
+                </div>
+                <div class="content">
+                    <div *ngIf="chart">
+                        <div class="chart-legend">
+                            <i class="fa fa-circle" style="color:#FF0000"></i> Temperature
+                            <i class="fa fa-circle" style="color:#0000FF"></i> Humidity
+                            <i class="fa fa-circle" style="color:#003F00"></i> Battery
+                        </div>
+                        <br />
+                        <canvas id="canvas" height="100">{{ chart }}</canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--
+<h2>Latest data at {{ latestData.ts }} </h2>
+<h2>Temperature = . . Battery = {{ latestData.v.toFixed(2) }}%</h2>
+ -->
+
