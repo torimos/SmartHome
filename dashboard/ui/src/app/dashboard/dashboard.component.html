@@ -81,21 +81,8 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="header">
-                    <h4 class="title">Historical data ({{ (sliderValue) }} day(s) ago)</h4>
-                    <p class="category">Tramp pam pa</p>
-                </div>
-                <div class="content">
-                    <ng5-slider [(value)]="sliderValue" [options]="sliderOptions" (userChangeEnd)="onSliderChange($event)"></ng5-slider>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="header">
                     <h4 class="title">Sensors Data</h4>
-                    <p class="category">Tramp pam pa</p>
+                    <p class="category">Selected {{ (sliderValue) }} day(s) ago</p>
                 </div>
                 <div class="content">
                     <div *ngIf="chart">
@@ -105,8 +92,17 @@
                             <i class="fa fa-circle" style="color:#003F00"></i> Battery
                         </div>
                         <br />
-                        <canvas id="canvas" height="100">{{ chart }}</canvas>
+                        <canvas id="canvas" height="80">{{ chart }}</canvas>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="content">
+                    <ng5-slider [(value)]="sliderValue" [options]="sliderOptions" (userChangeEnd)="onSliderChange($event)"></ng5-slider>
                 </div>
             </div>
         </div>
